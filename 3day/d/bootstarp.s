@@ -81,11 +81,11 @@ next:
 kernel:
   // 跳转到kernel
   mov %ch, (0x0ff0)
-  jmp 0xc200
+  jmp 0xc400
 
 error:
   mov $msg, %si
-  jmp kernel
+#  jmp kernel
 
 putloop:
   movb (%si), %al

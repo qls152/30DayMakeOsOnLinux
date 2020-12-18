@@ -4,7 +4,7 @@ elf = head.elf
 boot = kernel.out
 
 # 这个程序被装载到的程序的地址
-address = 0xc200
+address = 0xc400
 
 CFLAGS=-I.  -fno-stack-protector
 
