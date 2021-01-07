@@ -74,7 +74,7 @@ pipelineflush:
   movw %ax, %gs
   movw %ax, %ss
   
-  movl $start, %esp
+  // movl $start, %esp
   
   #bootpack传递
   movl $bootmain, %esi # 源
@@ -99,18 +99,18 @@ pipelineflush:
   call memcpy
 
   # bootpack启动
-  #movl $BOTPAK, %ebx
-  #movl 16(%ebx), %ecx
-  #addl $3, %ecx
-  #shr $2, %ecx
-  #jz skip
-  #movl 20(%ebx), %esi
-  #addl %ebx, %esi
-  #movl 12(%ebx), %edi
-  #call memcpy
+  movl $BOTPAK, %ebx
+  movl 16(%ebx), %ecx
+  addl $3, %ecx
+  shr $2, %ecx
+  jz skip
+  movl 20(%ebx), %esi
+  addl %ebx, %esi
+  movl 12(%ebx), %edi
+  call memcpy
 
 skip:
-  #movl 12(%ebx), %esp
+  movl 12(%ebx), %esp
   ljmp $(3*8), $0x0000
   jmp .
 
