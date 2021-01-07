@@ -31,8 +31,15 @@ typedef struct BOOTINFO {
 
 void bootmain(void) {
   BootInfo *binfo = (BootInfo *)0x0ff0;
+  
+  char font_A[16]={
+		0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
+		0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
+	};
+
   init_palette(); //设定调色板
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+  putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_FFFFFF, font_A);
 
   while (1) {
     io_hlt();
