@@ -1,8 +1,8 @@
-#include <naskfunc.h>
+#include "naskfunc.h"
 
 void init_palette(void);
 void set_palette(int start, int end, unsigned char* rgb);
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 
@@ -25,13 +25,12 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 
 typedef struct BOOTINFO {
   char cyls, leds, vmode, reserve;
-  short scrnx, scrny;
-  char *vram;
-} BOOTINFO;
+	short scrnx, scrny;
+	char *vram;
+} BootInfo;
 
 void bootmain(void) {
-  init_palette(); //设定调色板
-  BOOTINFO *binfo = (BOOTINFO *)0x0ff0;
+  BootInfo *binfo = (BootInfo *)0x0ff0;
   init_palette(); //设定调色板
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
@@ -79,7 +78,7 @@ void set_palette(int start, int end, unsigned char* rgb) {
   return;
 }
 
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
   int x, y;
   for (y = y0; y <= y1; ++y) {
     for (x = x0; x <= x1; ++x) {
@@ -90,7 +89,7 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 }
 
 void init_screen(char *vram, int xsize, int ysize) {
-/* 根据 0xa0000 + x + y * 320 计算坐标 8*/
+  /* 根据 0xa0000 + x + y * 320 计算坐标 8*/
 	boxfill8(vram, xsize, COL8_008484,  0,         0,          xsize -  1, ysize - 29);
 	boxfill8(vram, xsize, COL8_C6C6C6,  0,         ysize - 28, xsize -  1, ysize - 28);
 	boxfill8(vram, xsize, COL8_FFFFFF,  0,         ysize - 27, xsize -  1, ysize - 27);

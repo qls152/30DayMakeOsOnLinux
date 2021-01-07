@@ -30,9 +30,9 @@ entry:
   movw $200, (SCRNY)
   movl $0x000a0000, (VRAM)
   
-  mov $0x02, %ah # 用BIOS取得键盘上各种LED指示灯的状态
+  movb $0x02, %ah # 用BIOS取得键盘上各种LED指示灯的状态
   int $0x16
-  mov %al, (LEDS) 
+  movb %al, (LEDS) 
 
   # 此处是30天自制操作系统由实模式转到保护模式所添加的100多行代码
 
@@ -43,7 +43,7 @@ entry:
   movb 0xff, %al
   outb %al, $0x21
   nop # 不断执行out指令
-  out %al, $0xa1
+  outb %al, $0xa1
   cli # 进一步关闭中断
 
   # 让CPU支持1M以上的内存，设置A20GATE
@@ -111,7 +111,7 @@ pipelineflush:
 
 skip:
   movl 12(%ebx), %esp
-  ljmp $(3*8), $0x0000
+  ljmp $(2*8), $0x0000
   jmp .
 
 waitbkdout:

@@ -4,7 +4,9 @@ elf=head.elf
 boot=head.out
 asm=head.asm
 address=0xc400
-CFLAGS=-I.  -fno-stack-protector
+
+CFLAGS := -I. -fno-stack-protector
+CFLAGS += -m32
 
 kernelobj=main.o
 
@@ -13,10 +15,10 @@ all: head main
 	mv head.out  kernel.out
 
 %.o:%.c
-	gcc  -nostdinc $(CFLAGS) -c $< -m32 -o $@
+	gcc -nostdinc $(CFLAGS) -c $< -o $@
 
 %.o:%.S
-	gcc -nostdinc $(CFLAGS) -c $< -m32 -o $@
+	gcc -nostdinc $(CFLAGS) -c $< -o $@
 
 head:head.o
 main:$(kernelobj)
