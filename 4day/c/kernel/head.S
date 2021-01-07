@@ -111,7 +111,7 @@ pipelineflush:
 
 skip:
   #movl 12(%ebx), %esp
-  ljmp $(3*8), $0x0000
+  ljmp $(2*8), $0x0000
   jmp .
 
 waitbkdout:
