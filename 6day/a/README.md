@@ -1,7 +1,5 @@
-该部分主要实现GDT和IDT
+分割编译
 
-关于GDT和LDT的含义可以参考：
+本部分尝试把 graphic抽取出来 发现不能正常工作
 
-linux0.11内核完全注释
-
-http://www.oldlinux.org/download/clk011c-3.0.pdf
+也未能定位原因，因此暂时该部分未抽取出来
