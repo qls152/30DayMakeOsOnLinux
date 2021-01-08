@@ -1,5 +1,11 @@
+// graphic
 void init_palette(void);
 void set_palette(int start, int end, unsigned char* rgb);
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
+void putfont8s_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
+void init_mouse_cursor8(char *mouse, char bc);
+void putblock8_8(char *vram, int vxsize, int pxsize, int pysize,
+                 int px0, int py0, char *buf, int bxsize);
 void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int x, int y);
 
@@ -20,19 +26,15 @@ void init_screen(char *vram, int x, int y);
 #define COL8_008484		14
 #define COL8_848484		15
 
-void init_gdtidt(void);
-void load_gdtr(int limit, int addr);
-void load_idtr(int limit, int addr);
-
-
-
-
 typedef struct BOOTINFO {
   char cyls, leds, vmode, reserve;
   short scrnx, scrny;
   char *vram;
 } BootInfo;
 
+#define ADR_BOOTINFO 0x00000ff0
+
+//dsctbl.c
 struct SEGMENT_DESCRIPTOR {
   short limit_low, base_low; // 0-1字节代表limit_low, 2-3字节存放base_low
   char base_mid, access_right; // 第4字节存放base_mid, 第5字节存放访问属性
@@ -45,5 +47,10 @@ struct GATE_DESCRIPTOR {
   short offset_high;
 };
 
+void init_gdtidt(void);
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
+
+//asmint32.S
+void load_gdtr(int limit, int addr);
+void load_idtr(int limit, int addr);

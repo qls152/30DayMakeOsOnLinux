@@ -7,7 +7,7 @@ address=0xc400
 CFLAGS := -I. -fno-stack-protector
 CFLAGS += -m32
 
-kernelobj=main.o print.o dsctbl.o asmint32.o
+kernelobj=main.o graphic.o print.o dsctbl.o asmint32.o
 
 all: head main
 	cat main.out >> entry.out
