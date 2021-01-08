@@ -6,6 +6,7 @@ void set_palette(int start, int end, unsigned char* rgb);
 void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
+void putfont8s_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
 
 
 #define COL8_000000		0
@@ -31,14 +32,14 @@ typedef struct BOOTINFO {
 	char *vram;
 } BootInfo;
 
-void putfont_8(BootInfo *binfo);
+void putfont(BootInfo *binfo);
 
 void bootmain(void) {
   BootInfo *binfo = (BootInfo *)0x0ff0;
   
   init_palette(); //设定调色板
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-  putfont_8(binfo);
+  putfont(binfo);
 
   while (1) {
     io_hlt();
@@ -132,8 +133,17 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font) {
   return;
 }
 
-void putfont_8(BootInfo *binfo) {
+void putfont8s_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s) {
   static MAKE_FONT
-  putfont8(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, hankaku + 'C' * 16);
-  putfont8(binfo->vram, binfo->scrnx, 16, 8, COL8_FFFFFF, hankaku+'h'*16);
+  for (; *s != 0; s++) {
+    putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
+    x += 8;
+  }
+  return;
+}
+
+void putfont(BootInfo *binfo) {
+  putfont8s_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "ABC 123");
+  putfont8s_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_FFFFFF, "Hello MyOS");
+  return;
 }
