@@ -1,10 +1,6 @@
 #include "naskfunc.h"
-#include "font.h"
 #include "print.h"
 #include "head.h"
-
-
-
 
 void auxmain(BootInfo *binfo);
 
@@ -18,6 +14,21 @@ void bootmain(void) {
   while (1) {
     io_hlt();
   }
+}
+
+void auxmain(BootInfo *binfo) {
+  char s[10], mcursor[256];
+  /* 显示鼠标 */
+	int mx = (binfo->scrnx - 16) / 2; /* 计算画面的中心坐标*/
+	int my = (binfo->scrny - 28 - 16) / 2;
+	init_mouse_cursor8(mcursor, COL8_008484);
+	putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
+  
+  sprintf(s, "scrnx = %d", binfo->scrnx);
+  putfont8s_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "ABC 123");
+  putfont8s_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_FFFFFF, "Hello MyOS");
+  putfont8s_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
+  return;
 }
 
 void init_palette(void) {
@@ -43,32 +54,6 @@ void init_palette(void) {
   return;
 }
 
-void set_palette(int start, int end, unsigned char* rgb) {
-  int i, eflags;
-  eflags = io_load_eflags(); //记录中断许可标志
-  io_cli();
-  io_out8(0x03c8, start);
-  for (i = start; i <= end; ++i) {
-    io_out8(0x03c9, rgb[0]/4);
-    io_out8(0x03c9, rgb[1]/4);
-    io_out8(0x03c9, rgb[2]/4);
-    rgb += 3;
-  }
-
-  io_store_eflags(eflags); //恢复中断许可标志
-  return;
-}
-
-
-void putfont8s_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s) {
-  static MAKE_FONT
-  for (; *s != 0; s++) {
-    putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
-    x += 8;
-  }
-  return;
-}
-
 void init_screen(char *vram, int xsize, int ysize) {
   /* 根据 0xa0000 + x + y * 320 计算坐标 8*/
 	boxfill8(vram, xsize, COL8_008484,  0,         0,          xsize -  1, ysize - 29);
@@ -87,58 +72,6 @@ void init_screen(char *vram, int xsize, int ysize) {
 	boxfill8(vram, xsize, COL8_848484, xsize - 47, ysize - 23, xsize - 47, ysize -  4);
 	boxfill8(vram, xsize, COL8_FFFFFF, xsize - 47, ysize -  3, xsize -  4, ysize -  3);
 	boxfill8(vram, xsize, COL8_FFFFFF, xsize -  3, ysize - 24, xsize -  3, ysize -  3);
-  return;
-}
-
-void init_mouse_cursor8(char *mouse, char bc) {
-  static char cursor[16][16] = {
-		"**************..",
-		"*OOOOOOOOOOO*...",
-		"*OOOOOOOOOO*....",
-		"*OOOOOOOOO*.....",
-		"*OOOOOOOO*......",
-		"*OOOOOOO*.......",
-		"*OOOOOOO*.......",
-		"*OOOOOOOO*......",
-		"*OOOO**OOO*.....",
-		"*OOO*..*OOO*....",
-		"*OO*....*OOO*...",
-		"*O*......*OOO*..",
-		"**........*OOO*.",
-		"*..........*OOO*",
-		"............*OO*",
-		".............***"
-	};
-
-  for (int y = 0; y < 16; ++y) {
-    for (int x = 0; x < 16; ++x) {
-      if (cursor[y][x] == '*') {
-        mouse[y * 16 + x] = COL8_000000;
-      }
-      if (cursor[y][x] == 'O') {
-        mouse[y * 16 + x] = COL8_FFFFFF;
-      }
-      if (cursor[y][x] == '.') {
-        mouse[y * 16 + x] = bc;
-      }
-    }
-  }
-
-  return;
-}
-
-void auxmain(BootInfo *binfo) {
-  char s[10], mcursor[256];
-  /* 显示鼠标 */
-	int mx = (binfo->scrnx - 16) / 2; /* 计算画面的中心坐标*/
-	int my = (binfo->scrny - 28 - 16) / 2;
-	init_mouse_cursor8(mcursor, COL8_008484);
-	putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
-  
-  sprintf(s, "scrnx = %d", binfo->scrnx);
-  putfont8s_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "ABC 123");
-  putfont8s_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_FFFFFF, "Hello MyOS");
-  putfont8s_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
   return;
 }
 
