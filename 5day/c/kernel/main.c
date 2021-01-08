@@ -36,14 +36,14 @@ typedef struct BOOTINFO {
 	char *vram;
 } BootInfo;
 
-void putfont(BootInfo *binfo);
+void auxmain(BootInfo *binfo);
 
 void bootmain(void) {
   BootInfo *binfo = (BootInfo *)0x0ff0;
   
   init_palette(); //设定调色板
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-  putfont(binfo);
+  auxmain(binfo);
 
   while (1) {
     io_hlt();
@@ -146,7 +146,7 @@ void putfont8s_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
   return;
 }
 
-void putfont(BootInfo *binfo) {
+void auxmain(BootInfo *binfo) {
   char s[10], mcursor[256];
   /* 显示鼠标 */
 	int mx = (binfo->scrnx - 16) / 2; /* 计算画面的中心坐标*/
