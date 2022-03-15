@@ -1,17 +1,21 @@
-src=ipl.s
-obj=hello.o
-elf=hello.elf
-bootstarp=bootstarp.img
 
-all:img
+all:floppy.img
 
-img:
-	gcc -m32 -o $(obj) -c $(src)
-	ld -m elf_i386 $(obj) -e start -Ttext 0x7c00 -o $(elf)
-	objcopy -S -O binary -j .text $(elf) $(bootstarp)
-
-run:
-	qemu-system-i386 -drive file=$(bootstarp),index=0,media=disk,format=raw
-
+bin = boot
+ASFLAGS = -f bin
+$(bin): ipl.s
+	nasm $(ASFLAGS) -o $@ $<
+ 
+floppy.img: $(bin)
+	dd if=/dev/zero of=$@ bs=1024 count=1440
+	dd if=$< of=$@ bs=512 conv=notrunc
+ 
+.PHONY: clean
 clean:
-	-rm -f $(obj) $(elf) $(bootstarp)
+	rm -f $(bin) floppy.img
+ 
+.PHONY: run
+run: floppy.img
+	qemu-system-i386 -fda $<
+	# gcc -m32  -ffreestanding -o $(obj) -c $(src) -curses
+	# ld -m elf_i386 $(obj) -o $(elf) --oformat binary
