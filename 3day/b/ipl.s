@@ -1,75 +1,78 @@
-.global start
-.code16
-// 标准的FAT12格式软盘专用代码
-start:
+;标准的FAT12格式软盘专用代码
+    org 0x7c00
     jmp   entry
-    .byte 0x90
-    .ascii "helloOSX"
-    .word 512
-    .byte 1
-    .word 1
-    .byte 2
-    .word 224
-    .word 2880
-    .byte 0xf0
-    .word 9
-    .word 18
-    .word 2
-    .long 0
-    .long 2880
-    .byte 0, 0, 0x29
-    .long 0xffffffff
-    .ascii "helloOSX   "
-    .ascii "fat12   "
-    .fill 18
+    db 0x90
+    db "helloOSX"
+    dw 512
+    db 1
+    dw 1
+    db 2
+    dw 224
+    dw 2880
+    db 0xf0
+    dw 9
+    dw 18
+    dw 2
+    dd 0
+    dd 2880
+    db 0, 0, 0x29
+    dd 0xffffffff
+    db "helloOSX   "
+    db "fat12   "
+    resb 18
 
 entry:
-  mov $0,  %ax
-  mov %ax, %ds
-  mov %ax, %es
-  mov %ax, %ss
-  mov $0x7c00, %sp
+  mov ax,  0
+  mov ds, ax
+  mov es, ax
+  mov ss, ax
+  mov sp, 0x7c00
+  
+  ;如下操作进行清屏
+  mov ax, 0x0600
+  mov bx, 0x0700
+  mov cx, 0
+  mov dx, 0x184f
+  int 0x10
 
-// 读磁盘
-  mov $0x0820, %ax
-  mov %ax, %es
-  // 柱面0
-  movb $0, %ch
-  // 磁头0 
-  movb $0, %dh 
-  // 扇区2
-  movb $2, %cl
+  ; 读磁盘
+  mov ax, 0x0820
+  mov es, ax
+  ; 柱面0
+  mov ch, 0
+  ; 磁头0 
+  mov dh, 0 
+  ; 扇区2
+  mov cl, 2
 
-  // 记录失败次数的寄存器
-  mov $0, %si
+  mov si, 0
 
 retry:
-  mov $0x02, %ah
-  mov $1, %al
-  mov $0, %bx
-  mov $0x00, %dl
-  int $0x13
+  mov ah, 0x02
+  mov al, 0x1
+  mov bx, 0x0
+  mov dl, 0x0
+  int 0x13
   jnc fin
-  add $1, %si
-  cmp $5, %si
-  // 当SI >= 5时 跳转到error
+  add si, 1
+  cmp si, 5
   jae error
-  mov $0x00, %ah
-  mov $0x00, %dl
-  int $0x13
+  mov ah, 0x00
+  mov dl, 0x00
+  int 0x13
   jmp retry
 
 error:
-  mov $msg, %si
+    mov si, msg
 
 putloop:
-  movb (%si), %al
-  add $1, %si
-  cmp $0, %al
+  mov al, [si]
+  add si, 1
+  cmp al, 0
   je fin
-  movb $0x0e, %ah
-  movw $15, %bx
-  int $0x10
+  mov ah, 0x0e
+  mov bx, 15
+  int 0x10
   jmp putloop
 
 fin:
@@ -77,10 +80,10 @@ fin:
   jmp fin
 
 msg:
-  .byte 0x0a, 0x0a
-  .ascii "hello,world"
-  .byte 0x0a
-  .byte 0
+  db 0x0a, 0x0a
+  db "hello,world"
+  db 0x0a
+  db 0
 
-  .org 510 # 填充为0
-  .byte 0x55, 0xaa
+  times 510-($-$$) db 0 
+  db 0x55, 0xaa
