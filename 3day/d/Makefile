@@ -1,38 +1,40 @@
-src=bootstarp.s
-obj=bootstarp.o
-elf=bootstarp.elf
-bootstarp=bootstarp.img
-kernel_bin = kernel.out
 
 subdir = kernel
 
-all:img
+head = head.bin
+bootstarp = bootstarp.bin
+kernel = kernel.img
+ASFLAGS = -f bin
 
-img:subsystem
-	gcc -m32 -o $(obj) -c $(src)
-	ld -m elf_i386 $(obj) -e start -Ttext 0x7c00 -o $(elf)
-	objcopy -S -O binary -j .text $(elf) $(bootstarp)
-	cd $(subdir);mv kernel.out ../
+all:floppy.img
 
-subsystem:
+$(head):
 	$(MAKE) -C $(subdir)
+	cd $(subdir);mv head.bin ../$(head)
 
-boot:
-	@dd if=/dev/zero of=$(bootstarp) seek=2 count=2878
+$(bootstarp): bootstarp.s
+	nasm $(ASFLAGS) -o $@ $<
+	#cat $(bootstarp) $(head) > $@
+ 
+floppy.img: $(bootstarp) $(head)
+	dd if=/dev/zero of=$@ bs=1024 count=1440
+	dd if=$(bootstarp) of=$@ bs=512 conv=notrunc
+	#dd if=$(head) of=$@ bs=512 seek=2 conv=notrunc
 
-makefat12:   
+makefat12: $(head)  
 	mkdir -p /tmp/floppy
-	sudo mount -o loop $(bootstarp) /tmp/floppy -o fat=12
+	sudo mount -o loop floppy.img /tmp/floppy -o fat=12
 	sleep 1
-	sudo cp $(kernel_bin) /tmp/floppy
+	sudo cp $(head) /tmp/floppy
 	sleep 1
 	sudo umount /tmp/floppy
 
-run:
-	make boot
-	make makefat12
-	qemu-system-i386 -drive file=$(bootstarp),index=0,media=disk,format=raw,if=floppy
-
+.PHONY: clean
 clean:
-	-rm -f $(obj) $(elf) $(bootstarp) $(haros) $(kernel_bin)
-	cd $(subdir);make clean
+	rm -f $(bootstarp) $(kernel) $(head) floppy.img
+ 
+.PHONY: run
+run: floppy.img
+	qemu-system-i386 -fda $<
+	# gcc -m32  -ffreestanding -o $(obj) -c $(src)
+	# ld -m elf_i386 $(obj) -o $(elf) --oformat binary

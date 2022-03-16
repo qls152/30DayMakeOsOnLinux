@@ -1,19 +1,9 @@
 src = head.s
-obj = head.o
-elf = head.elf
-boot = kernel.out
-
-# 这个程序被装载到的程序的地址
-address = 0xc400
-
-CFLAGS=-I.  -fno-stack-protector
-
+obj = head.bin
 all:img
 
 img:$(src)
-	gcc -nostdinc $(CFLAGS) -m32 -o $(obj) -c $(src) 
-	ld -m elf_i386 $(obj) -e start -Ttext $(address) -o $(elf)
-	objcopy -S -O binary -j .text $(elf) $(boot)
+	nasm -f bin -o $(obj) $(src)
 
 clean:
-	-rm -f $(obj) $(elf) $(boot)
+	-rm -f $(obj)

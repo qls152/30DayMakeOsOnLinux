@@ -5,3 +5,5 @@
 此时gas会报错，最后查看网上相关原因 主要是equ无法识别十六进制
 
 此时应该用.set 相当于#define
+
+od -A x -t x1z floppy.img
