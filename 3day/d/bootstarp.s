@@ -1,55 +1,27 @@
-;标准的FAT12格式软盘专用代码
-    org 0x7c00
-    jmp   entry
-    db 0x90
-    db "helloOSX"
-    dw 512
-    db 1
-    dw 1
-    db 2
-    dw 224
-    dw 2880
-    db 0xf0
-    dw 9
-    dw 18
-    dw 2
-    dd 0
-    dd 2880
-    db 0, 0, 0x29
-    dd 0xffffffff
-    db "helloOSX   "
-    db "fat12   "
-    resb 18
 
-entry:
+    [org 0x7c00]
+
   mov ax,  0
   mov ds, ax
   mov es, ax
   mov ss, ax
   mov sp, 0x7c00
+  
+  mov bx, 0x1000 ; 读磁盘, 文件读入[es:bx]
 
-clearscreen:  
-  ;如下操作进行清屏
-  mov ax, 0x0600
-  mov bx, 0x0700
-  mov cx, 0
-  mov dx, 0x184f
-  int 0x10
-
-
-  mov ax, 0x0820 ; 读磁盘
+  mov ax, 0x1000 
   mov es, ax
   mov ch, 0 ; 柱面0
   mov dh, 0  ; 磁头0 
   mov cl, 2  ; 扇区2
- 
+
 readloop:
   mov si, 0 ;记录失败次数的寄存器
 
 retry:
   mov ah, 0x02
   mov al, 0x1
-  mov bx, 0x0
+  ;mov bx, 0x0
   mov dl, 0x00
   int 0x13
   jnc next
@@ -67,14 +39,11 @@ next:
   add cl, 1
   cmp cl, 18
   jbe readloop
-
-
-kernel:
-  mov [0x0ff0], ch ;跳转到kernel
-  jmp 0xc200
+  
+  jmp 0x1000:0x1000 ;跳入head.s
 
 error:
-    mov si, msg
+  mov si, msg
 
 putloop:
   mov al, [si]

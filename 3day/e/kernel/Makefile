@@ -1,34 +1,26 @@
 src = head.s
-obj = head.o
-elf = head.elf
-boot = head.out
-kernel_out=kernel.out
+address = 0x1000
+CFLAGS=-I.
 
-# 这个程序被装载到的程序的地址
-address = 0xc400
+kernelobj = kernel.bin 
+head=head.bin
 
-CFLAGS=-I.  -fno-stack-protector
+kernel = entry.o main.o naskfunc.o
 
-kernelobj = main.o naskfunc.o
+all:$(kernelobj)
 
-%.o:%.c
-	gcc -nostdinc $(CFLAGS) -c $< -m32 -o $@
+$(head):$(src) 
+	nasm -f bin -o head.bin $(src)
 
-%.o:%.s
-	gcc -nostdinc $(CFLAGS) -c $< -m32 -o $@
+entry.o:entry.s 
+	nasm -f elf -o $@ $<
 
-all:head main
-	cat main.out >> $(boot)
-	mv $(boot) $(kernel_out)
+%.o:%.c 
+	gcc -nostdinc -m32 -fno-pie -o $@ -c $<
 
-head:head.o
-main:$(kernelobj)
-head:
-	ld -m elf_i386 $(obj) -e start -Ttext $(address) -o $(elf)
-	objcopy -S -O binary -j .text $(elf) $(boot)
-main:
-	ld -m elf_i386 $(obj) -e bootmain -T kernel.ld -o main.elf $(kernelobj)
-	objcopy -S -O binary  main.elf main.out
+$(kernelobj):$(kernel) $(head)
+	ld -s -x -m elf_i386 -Ttext $(address) -o $(kernelobj) $(kernel)
+
 
 clean:
-	-rm -f $(obj) $(elf) $(boot)
+	-rm -f $(obj) $(elf) $(boot) $(kernelobj) kernel.bin *.o

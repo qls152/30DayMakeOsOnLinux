@@ -19,14 +19,14 @@ $(bootstarp): bootstarp.s
 floppy.img: $(bootstarp) $(head)
 	dd if=/dev/zero of=$@ bs=1024 count=1440
 	dd if=$(bootstarp) of=$@ bs=512 conv=notrunc
-	#dd if=$(head) of=$@ bs=512 seek=2 conv=notrunc
+	dd if=$(head) of=$@ bs=512 seek=2 conv=notrunc
 
-makefat12: $(head)  
+makefat12:  
 	mkdir -p /tmp/floppy
 	sudo mount -o loop floppy.img /tmp/floppy -o fat=12
 	sleep 1
-	sudo cp $(head) /tmp/floppy
-	sleep 1
+	#sudo cp $(head) /tmp/floppy
+	#sleep 1
 	sudo umount /tmp/floppy
 
 .PHONY: clean

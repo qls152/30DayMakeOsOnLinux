@@ -1,134 +1,162 @@
-.set CYLS,  0x0ff0 # CYLS设定启动区
-.set LEDS,  0x0ff1
-.set VMODE, 0x0ff2 # VMODE 关于颜色数目的信息，颜色的位数
-.set SCRNX, 0x0ff4 # 分辨率X
-.set SCRNY, 0x0ff6 # 分辨率Y
-.set VRAM,  0x0ff8 # VRAM图像缓冲区的开始地址
+; haribote-os boot asm
+; TAB=4
+ org 0x1000
 
-.set BOTPAK, 0x00280000 #加载bootpack
-.set DSKCAC, 0x00100000 #磁盘缓存的位置
-.set DSKCAC0, 0x00008000 #磁盘缓存的位置（实模式）
+; BOOT_INFO相关
+CYLS	equ	0x0ff0			; 引导扇区设置
+LEDS	equ	0x0ff1
+VMODE	equ	0x0ff2			; 关于颜色的信息
+SCRNX	equ	0x0ff4			; 分辨率X
+SCRNY	equ	0x0ff6			; 分辨率Y
+VRAM	equ	0x0ff8			; 图像缓冲区的起始地址
+KERNEL_OFFSET equ 0x1000
+[bits 16]
+  ;如下操作进行清屏
+  mov ax, 0x0600
+  mov bx, 0x0700
+  mov cx, 0
+  mov dx, 0x184f
+  int 0x10
+  mov bp, 0x9000
+  mov sp, bp
 
-.global start
-.code16  
-start:
-  xorw %ax, %ax
-  xorw %cx, %cx
-  mov $0x13, %al # VGA显卡，320 * 200 * 8位彩色
-  mov $0x00, %ah
-  int $0x10
+  mov bx, KERNEL_OFFSET ; 读磁盘, 文件读入[es:bx]
+
+  mov ax, 0x1000 
+  mov es, ax
+  mov ch, 0 ; 柱面0
+  mov dh, 0  ; 磁头0 
+  mov cl, 6  ; 扇区6
+
+readloop:
+  mov si, 0 ;记录失败次数的寄存器
+
+retry:
+  mov ah, 0x02
+  mov al, 0x1
+  ;mov bx, 0x0
+  mov dl, 0x00
+  int 0x13
+  jnc next
+  add si, 1
+  cmp si, 5
+  jae fin
+  mov ah, 0x00
+  mov dl, 0x00
+  int 0x13
+  jmp retry
+next:
+  mov ax, es 
+  add ax, 0x0020
+  mov es, ax
+  add cl, 1
+  cmp cl, 14
+  jbe readloop
+
+  ; VGA显卡，320x200x8bit
+  mov al,0x13			
+  mov ah,0x00
+  int 0x10
+  ; 屏幕的模式（参考C语言的引用）
+  mov byte [VMODE], 8	
+  mov word [SCRNX], 320
+  mov word [SCRNY], 200
+  mov dword [VRAM], 0x000a0000
+
+; 通过BIOS获取指示灯状态
+  mov ah,0x02
+  int 0x16 			; keyboard BIOS
+  mov [LEDS],al
   
-  movb $8, (VMODE) #记录画面模式
-  movw $320, (SCRNX)
-  movw $200, (SCRNY)
-  movl $0x000a0000, (VRAM)
-  
-  mov $0x02, %ah # 用BIOS取得键盘上各种LED指示灯的状态
-  int $0x16
-  mov %al, (LEDS) 
+; 防止PIC接受所有中断
+;	AT兼容机的规范、PIC初始化
+;	然后之前在CLI不做任何事就挂起
+;	PIC在同意后初始化
 
-  # 此处是30天自制操作系统由实模式转到保护模式所添加的100多行代码
+  mov al, 0xff
+  out 0x21, al
+  nop	; 不断执行OUT指令
+  out 0xa1, al
 
-  # 防止PIC接受所有中断
-  # AT兼容规范，PIC初始化
-  # 然后之前在CLI不做任何事就挂起
-  # PIC在同意后初始化
-  mov 0xff, %al
-  out %al, $0x21
-  nop # 不断执行out指令
-  out %al, $0xa1
-  cli # 进一步关闭中断
+  cli ; 进一步中断CPU
 
-  # 让CPU支持1M以上的内存，设置A20GATE
-  call waitbkdout
-  mov $0xd1, %al
-  outb %al, $0x64
-  call waitbkdout
-  mov $0xdf, %al # enable A20
-  outb %al, $0x60
-  call waitbkdout
-  
-  # 打开CR0的bit0后，便切换至32位
-  # 注 此处可以参考linux0.11的实现方式，利用gas的lmsw命令进行简化，为了与30天自制OS一致，便未做修改
-  lgdt gdtr0 # 利用lgdt指令设置GDTR寄存器
-  movl %cr0, %eax
-  andl $0x7fffffff, %eax # 设置bit31为0，禁止分页
-  orl  $0x00000001, %eax # 设置cr0 bit0为1，切换到32位模式，此后的命令便处于32位模式
-  movl %eax, %cr0
-  jmp pipelineflush
+; 让CPU支持1M以上内存、设置A20GATE
 
-pipelineflush:
-  movw $(1*8), %ax
-  movw %ax, %ds
-  movw %ax, %es
-  movw %ax, %fs
-  movw %ax, %gs
-  movw %ax, %ss
+  call	waitkbdout
+  mov	al, 0xd1
+  out	0x64, al
+  call	waitkbdout
+  mov	al, 0xdf ; enable A20
+  out	0x60, al
+  call	waitkbdout
 
-  #bootpack传递
-  movl $bootpack, %esi # 源
-  movl BOTPAK, %edi # 目的
-  movl $(512*1024/4), %ecx
-  call memcpy
+  call switch_to_pm
+  jmp $
 
-  # 传输磁盘数据
-  # 从引导区开始
-  movl $0x7c00, %esi
-  movl DSKCAC, %edi
-  movl $(512/4), %ecx
-  call memcpy
+[bits 16]
+switch_to_pm:
+    cli ; 
+    lgdt [gdt_descriptor] ; 
+    mov eax, cr0
+    or eax, 0x1 ; 
+    mov cr0, eax
+    jmp dword CODE_SEG:init_pm
 
-  # 剩余的全部数据
-  movl $(DSKCAC0 + 512), %esi
-  movl $(DSKCAC + 512), %edi
-  movl $0, %ecx
-  movb (CYLS), %ecx
-  imul $(512*18*2/4), %ecx
-  subl $(512/4), %ecx
-  call memcpy
+[bits 32]
+init_pm:
+    mov ax, DATA_SEG 
+    mov ds, ax
+    mov ss, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
 
-  # bootpack启动
-  movl BOTPAK, %ebx
-  movl 16(%ebx), %ecx
-  addl $3, %ecx
-  shr $2, %ecx
-  jz skip
-  movl 20(%ebx), %esi
-  addl %ebx, %esi
-  movl 12(%ebx), %edi
-  call memcpy
+    mov ebp, 0x90000
+    mov esp, ebp
 
-skip:
-  movl 12(%ebx), %esp
-  ljmp $(2*8), $0x001b
+    call BEGIN_PM 
 
-waitbkdout:
-  inb $0x64, %al
-  testb $0x02, %al 
-  jnz waitbkdout
-  ret
+BEGIN_PM:
+    ;mov ebx, MSG_PROT_MODE
+    ;call print_string_pm
+    call KERNEL_OFFSET
+    jmp $
 
-# 注 该处可以利用movsw与movsb进行简化，本次为了与30天自制OS一致便未做修改
-memcpy:
-  movl (%esi), %eax
-  addl $4, %esi
-  movl %eax, (%edi)
-  addl $4, %edi
-  subl $1, %ecx
-  jnz memcpy # 运算结果不为0 跳转memcpy
-  ret 
+gdt_start:
+    dd 0x0 
+    dd 0x0
 
-.align 4
-gdt:
-  .word 0x0000,0x0000,0x0000,0x0000 # null
-  .word 0xffff,0x0000,0x9200,0x00cf # 写32位段寄存器
-#  .word 0xffff,0x0000,0x9a00,0x0047 # 增加代码段，用在16位--》32位转换
-  .word 0xffff,0x0000,0x9a28,0x0047 # 可执行文件的32bit寄存器（botpack用）
-  .word 0x00
+gdt_code: 
+    dw 0xffff    ; segment length, bits 0-15
+    dw 0x0       ; segment base, bits 0-15
+    db 0x0       ; segment base, bits 16-23
+    db 10011010b ; flags (8 bits)
+    db 11001111b ; flags (4 bits) + segment length, bits 16-19
+    db 0x0       ; segment base, bits 24-31
 
-gdtr0:
-  .word 23
-  .long gdt
+gdt_data:
+    dw 0xffff
+    dw 0x0
+    db 0x0
+    db 10010010b
+    db 11001111b
+    db 0x0
 
-.align 4
-bootpack:
+gdt_end:
+
+gdt_descriptor:
+    dw gdt_end - gdt_start - 1
+    dd gdt_start
+
+CODE_SEG equ gdt_code - gdt_start
+DATA_SEG equ gdt_data - gdt_start
+
+waitkbdout:
+  in  al, 0x64
+  and al, 0x02
+  jnz waitkbdout		; AND结果不为0跳转到waitkbdout
+
+fin:
+  hlt 
+  jmp fin
+
