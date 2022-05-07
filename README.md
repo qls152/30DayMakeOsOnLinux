@@ -9,3 +9,9 @@
 跟我一起写makefile
 
 本次从第二天开始
+
+参考：
+
+[objcopy](http://linux.51yip.com/search/objcopy)
+
+

@@ -1,37 +1,23 @@
-src=head.S
-obj=head.o
-elf=head.elf
-boot=head.out
-asm=head.asm
-address=0xc400
+src = head.s
+kernel = kernel.bin
+mainobj = main.out
+mainelf = main.elf
+
 CFLAGS=-I.  -fno-stack-protector
+kernelobj = main.o naskfunc.o
 
-kernelobj=main.o
+all:head main
+	cat main.out >> $(kernel)
 
-all: head main
-	cat main.out >> head.out
-	mv head.out  kernel.out
+head:$(src)
+	nasm -f bin -o $(kernel) $(src)
+
+main:$(kernelobj)
+	ld -m elf_i386 -e bootmain -T kernel.ld -o $(mainelf) $(kernelobj)
+	objcopy -S -O binary  $(mainelf) $(mainobj)
 
 %.o:%.c
-	gcc  -nostdinc $(CFLAGS) -c $< -m32 -o $@
-
-%.o:%.S
 	gcc -nostdinc $(CFLAGS) -c $< -m32 -o $@
 
-head:head.o
-main:$(kernelobj)
-head:
-	ld -m elf_i386 $(obj) -e start -Ttext $(address) -o $(elf)
-	objcopy -S -O binary -j .text $(elf)  $(boot)
-	objdump -S $(elf) > $(asm)
-
-
-main:
-	@echo "addr=0x00"
-	ld -m elf_i386  -e bootmain -T kernel.ld -o main.elf $(kernelobj)
-	objdump -S -D $@.elf >$@.asm
-	objcopy  -S -O binary  $@.elf $@.out
-
-
 clean:
-	-rm -f $(obj) $(elf) $(boot) main.elf main.out naskfunc.o main.o *.asm
+	-rm -f $(kernel) $(obj) *.elf *.o *.out
