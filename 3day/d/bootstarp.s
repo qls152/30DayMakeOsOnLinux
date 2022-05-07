@@ -7,7 +7,7 @@
   mov ss, ax
   mov sp, 0x7c00
   
-  mov bx, 0x1000 ; 读磁盘, 文件读入[es:bx]
+  mov bx, 0x0 ; 读磁盘, 文件读入[es:bx]
 
   mov ax, 0x1000 
   mov es, ax
@@ -40,7 +40,7 @@ next:
   cmp cl, 18
   jbe readloop
   
-  jmp 0x1000:0x1000 ;跳入head.s
+  jmp 0x1000:0x0 ;跳入head.s
 
 error:
   mov si, msg
