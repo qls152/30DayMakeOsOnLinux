@@ -1,4 +1,4 @@
- ;org 0x1000
+ org 0x1000
   
   ;如下操作进行清屏
   mov ax, 0x0600
@@ -9,6 +9,10 @@
 
   mov ah, 0x0e
   mov al, 'L'
+  int 0x10
+
+  mov al, 0x13
+  mov ah, 0x00
   int 0x10
 
 fin:
