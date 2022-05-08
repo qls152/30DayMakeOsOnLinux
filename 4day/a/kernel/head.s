@@ -10,7 +10,16 @@ DSKCAC0	EQU		0x00008000		; 磁盘缓存的位置（实模式）
  VRAM   equ 0x0ff8
 
  org 0x100
-  
+[bits 16]
+start:
+  jmp entry
+
+entry:
+  mov ax, 0
+  mov ds, ax
+  mov es, ax
+  mov ss, ax
+
   ;如下操作进行清屏
   mov ax, 0x0600
   mov bx, 0x0700
@@ -38,7 +47,6 @@ DSKCAC0	EQU		0x00008000		; 磁盘缓存的位置（实模式）
   out 0x21, al
   nop 
   out 0xa1, al 
-
   cli ;禁止cpu级别的中断
 
   call waitkbdout
@@ -49,14 +57,14 @@ DSKCAC0	EQU		0x00008000		; 磁盘缓存的位置（实模式）
   out 0x60, al,
   call waitkbdout
 
-[bits 32]
   lgdt [GDTR0]
   mov eax, cr0
   and eax, 0x7fffffff
   or  eax, 0x00000001
   mov cr0, eax 
-  jmp pipelineflush
+  jmp dword 2*8:pipelineflush
 
+[bits 32]
 pipelineflush:
   mov   ax, 1*8
   mov   ds, ax 
@@ -64,11 +72,17 @@ pipelineflush:
   mov   fs, ax 
   mov   gs, ax 
   mov   ss, ax 
+  mov   esp, start
 
-  mov   esi, bootpack
+  mov   esi, bootmain
   mov   edi, BOTPAK
   mov   ecx, 512*1024/4
   call  memcpy
+
+  mov		esi, 0x7c00		; 源
+	mov		edi, DSKCAC		; 目标
+	mov		ecx, 512/4
+	call	memcpy
 
   mov		esi,   DSKCAC0+512	; 源
 	mov		edi,   DSKCAC+512	; 目标
@@ -90,7 +104,7 @@ pipelineflush:
 
 skip:
 	mov		esp,[ebx+12]	; 堆栈的初始化
-	jmp		dword 2*8:0x0000001b
+	jmp		dword  2*8:0x0001b
 
 waitkbdout:
 	in		 al,0x64
@@ -105,19 +119,18 @@ memcpy:
 	add		edi,4
 	sub		ecx,1
 	jnz		memcpy			; 运算结果不为0跳转到memcpy
-	ret
-; memcpy地址前缀大小
+	ret               ; memcpy地址前缀大小
 
-	align	4
+align	16
 GDT0:
-		times 8 db 0				; 初始值
-		dw		0xffff,0x0000,0x9200,0x00cf	; 写32bit位段寄存器
-		dw		0xffff,0x0000,0x9a28,0x0047	; 可执行的文件的32bit寄存器（bootpack用）
+		dw 0x0000,0x0000,0x0000,0x0000 ; null
+    dw 0xffff,0x0000,0x9200,0x00cf ; 写32位段寄存器
+    dw 0xffff,0x0000,0x9a28,0x0047 ; 可执行文件的32bit寄存器（botpack用）
+    dw 0x00
 
-		dw		0
 GDTR0:
-		dw		8*3-1
-		dw		GDT0
+		dw		23
+		dd		GDT0
 
-		align	4
-bootpack:
+align	16
+bootmain:
