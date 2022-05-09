@@ -134,7 +134,6 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font) {
 }
 
 void putfont8s_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s) {
-  static MAKE_FONT
   for (; *s != 0; s++) {
     putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
     x += 8;

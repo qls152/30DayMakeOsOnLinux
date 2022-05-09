@@ -2,17 +2,16 @@ src=head.S
 obj=head.o
 elf=head.elf
 boot=head.out
-asm=head.asm
 address=0xc400
 
-CFLAGS := -I. -fno-stack-protector
+CFLAGS := -I. -fno-stack-protector -fno-builtin
 CFLAGS += -m32
 
 kernelobj=main.o print.o asmint32.o
 
 all: head main
-	cat main.out >> head.out
-	mv head.out  kernel.out
+	cat main.out >> $(boot)
+	mv $(boot) kernel.out
 
 %.o:%.c
 	gcc -nostdinc $(CFLAGS) -c $< -o $@
@@ -20,18 +19,12 @@ all: head main
 %.o:%.S
 	gcc -nostdinc $(CFLAGS) -c $< -o $@
 
-head:head.o
-main:$(kernelobj)
-head:
+head:$(obj)
 	ld -m elf_i386 $(obj) -e start -Ttext $(address) -o $(elf)
 	objcopy -S -O binary -j .text $(elf)  $(boot)
-	objdump -S $(elf) > $(asm)
 
-
-main:
-	@echo "addr=0x00"
+main:$(kernelobj)
 	ld -m elf_i386  -e bootmain -T kernel.ld -o main.elf $(kernelobj)
-	objdump -S -D $@.elf >$@.asm
 	objcopy  -S -O binary  $@.elf $@.out
 
 

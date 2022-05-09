@@ -11,7 +11,7 @@
   ysize=16
 */
 
- unsigned char  Font8x16[] = {
+static unsigned char  Font8x16[] = {
 /* pixels */
 
 /* 0x00 */

@@ -1,4 +1,4 @@
-unsigned short ASCII_Table[] =
+static unsigned short ASCII_Table[] =
        {
          /* Space ' '0 */
          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
