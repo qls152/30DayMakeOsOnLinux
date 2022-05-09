@@ -23,13 +23,9 @@ main:$(kernelobj)
 head:
 	ld -m elf_i386 $(obj) -e start -Ttext $(address) -o $(elf)
 	objcopy -S -O binary -j .text $(elf)  $(boot)
-	objdump -S $(elf) > $(asm)
-
 
 main:
-	@echo "addr=0x00"
 	ld -m elf_i386  -e bootmain -T kernel.ld -o main.elf $(kernelobj)
-	objdump -S -D $@.elf >$@.asm
 	objcopy  -S -O binary  $@.elf $@.out
 
 
