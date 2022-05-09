@@ -19,10 +19,10 @@ void bootmain(void) {
 void auxmain(BootInfo *binfo) {
   char s[10], mcursor[256];
   /* 显示鼠标 */
-	int mx = (binfo->scrnx - 16) / 2; /* 计算画面的中心坐标*/
-	int my = (binfo->scrny - 28 - 16) / 2;
-	init_mouse_cursor8(mcursor, COL8_008484);
-	putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
+  int mx = (binfo->scrnx - 16) / 2; /* 计算画面的中心坐标*/
+  int my = (binfo->scrny - 28 - 16) / 2;
+  init_mouse_cursor8(mcursor, COL8_008484);
+  putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
   
   sprintf(s, "scrnx = %d", binfo->scrnx);
   putfont8s_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "ABC 123");

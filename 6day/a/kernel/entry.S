@@ -110,8 +110,8 @@ pipelineflush:
   call memcpy
 
 skip:
-  movl 12(%ebx), %esp
-  //movl $start, %esp
+  //movl 12(%ebx), %esp
+  movl $start, %esp
   ljmp $(2*8), $0x0000
   jmp .
 
