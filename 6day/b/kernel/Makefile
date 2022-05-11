@@ -6,7 +6,7 @@ address=0xc400
 CFLAGS := -I. -fno-stack-protector -fno-builtin
 CFLAGS += -m32
 
-kernelobj=main.o graphic.o print.o dsctbl.o asmint32.o int.o
+kernelobj=main.o graphic.o dsctbl.o asmint32.o int.o print.o
 
 all: head main
 	cat main.out >> $(boot)

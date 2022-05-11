@@ -9,7 +9,7 @@ ENTRY(bootmain)
 SECTIONS
 {
 	/* Link the kernel at this address: "." means the current address */
-	. = 0x0000;
+	. = 0x340000;
 	.text :  {
 		*(.text)
 	}

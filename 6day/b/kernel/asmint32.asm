@@ -15,13 +15,49 @@ load_idtr:		; void load_idtr(int limit, int addr);
 	RET
 
 asm_inthandler21:
-	CALL	inthandler21
-	iretd 
+	PUSH	ES
+		PUSH	DS
+		PUSHAD
+		MOV		EAX,ESP
+		PUSH	EAX
+		MOV		AX,SS
+		MOV		DS,AX
+		MOV		ES,AX
+		CALL	inthandler21
+		POP		EAX
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD 
 
 asm_inthandler27:
-	CALL	inthandler27
-	iretd
+	PUSH	ES
+		PUSH	DS
+		PUSHAD
+		MOV		EAX,ESP
+		PUSH	EAX
+		MOV		AX,SS
+		MOV		DS,AX
+		MOV		ES,AX
+		CALL	inthandler27
+		POP		EAX
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD
 
 asm_inthandler2c:
-	CALL	inthandler2c
-	IRETD
+	PUSH	ES
+		PUSH	DS
+		PUSHAD
+		MOV		EAX,ESP
+		PUSH	EAX
+		MOV		AX,SS
+		MOV		DS,AX
+		MOV		ES,AX
+		CALL	inthandler2c
+		POP		EAX
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD

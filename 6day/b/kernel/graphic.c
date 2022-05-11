@@ -41,17 +41,17 @@ void putblock8_8(char *vram, int vxsize, int pxsize, int pysize,
 
 void set_palette(int start, int end, unsigned char* rgb) {
   int i, eflags;
-  eflags = io_load_eflags(); //记录中断许可标志
-  io_cli();
-  io_out8(0x03c8, start);
+  eflags = read_eflags(); //记录中断许可标志
+  cli();
+  outb(0x03c8, start);
   for (i = start; i <= end; ++i) {
-    io_out8(0x03c9, rgb[0]/4);
-    io_out8(0x03c9, rgb[1]/4);
-    io_out8(0x03c9, rgb[2]/4);
+    outb(0x03c9, rgb[0]/4);
+    outb(0x03c9, rgb[1]/4);
+    outb(0x03c9, rgb[2]/4);
     rgb += 3;
   }
 
-  io_store_eflags(eflags); //恢复中断许可标志
+  write_eflags(eflags); //恢复中断许可标志
   return;
 }
 

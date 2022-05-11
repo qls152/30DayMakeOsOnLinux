@@ -5,7 +5,7 @@
 .set SCRNY, 0x0ff6 # 分辨率Y
 .set VRAM,  0x0ff8 # VRAM图像缓冲区的开始地址
 
-.set BOTPAK, 0x00280000 #加载bootpack
+.set BOTPAK, 0x00340000 #加载bootpack
 .set DSKCAC, 0x00100000 #磁盘缓存的位置
 .set DSKCAC0, 0x00008000 #磁盘缓存的位置（实模式）
 
@@ -110,9 +110,9 @@ pipelineflush:
   call memcpy
 
 skip:
-  //movl 12(%ebx), %esp
-  movl $start, %esp
-  ljmp $(2*8), $0x0000
+  movl 12(%ebx), %esp
+  //movl $start, %esp
+  call bootmain
   jmp .
 
 waitbkdout:
@@ -136,11 +136,11 @@ gdt:
   .word 0x0000,0x0000,0x0000,0x0000 # null
   .word 0xffff,0x0000,0x9200,0x00cf # 写32位段寄存器
   .word 0xffff,0x0000,0x9a00,0x0047 # 增加代码段，用在16位--》32位转换
-  .word 0xffff,0x0000,0x9a28,0x0047 # 可执行文件的32bit寄存器（botpack用）
+  // .word 0xffff,0x0000,0x9a28,0x0047 # 可执行文件的32bit寄存器（botpack用）
   .word 0x00
 
 gdtr0:
-  .word 31
+  .word 23
   .long gdt
 
 .align 4

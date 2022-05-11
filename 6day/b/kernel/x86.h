@@ -1,12 +1,10 @@
 #ifndef JOS_INC_X86_H
 #define JOS_INC_X86_H
 
-#include <type.h>
+#include "type.h"
 
-static __inline void io_hlt(void) __attribute__((always_inline));
 static __inline void breakpoint(void) __attribute__((always_inline));
 static __inline void sti(void) __attribute__((always_inline));
-static __inline void cli(void) __attribute__((always_inline));
 
 static __inline uint8_t inb(int port) __attribute__((always_inline));
 static __inline void insb(int port, void *addr, int cnt) __attribute__((always_inline));
@@ -42,10 +40,6 @@ static __inline uint32_t read_esp(void) __attribute__((always_inline));
 static __inline void cpuid(uint32_t info, uint32_t *eaxp, uint32_t *ebxp, uint32_t *ecxp, uint32_t *edxp);
 static __inline uint64_t read_tsc(void) __attribute__((always_inline));
 
-static __inline void io_hlt(void) {
-    __asm __volatile("hlt");
-}
-
 static __inline void
 breakpoint(void)
 {
@@ -57,10 +51,6 @@ sti(void)
 {
 
 	__asm __volatile("sti");
-}
-
-static __inline void cli(void) {
-   __asm __volatile("cli"); 
 }
 //int3会产生软件中断，这个软件中断通常是为调试代码而用的。可以在软件中断服务程序中打印出一些我们需要的信息。
 //因为我们现在还没有搞明白ldt的内容，没有有效的中断服务程序，所以调用这个软件中断后，会产生reset的效果。
@@ -317,4 +307,14 @@ write_eflags(uint32_t eflags)
         __asm __volatile("pushl %0; popfl" : : "r" (eflags));
 }
 
+
+
+
+
+
+//_load_idtr:		; void load_idtr(int limit, int addr);
+//		MOV		AX,[ESP+4]		; limit
+//		MOV		[ESP+6],AX
+//		LIDT	[ESP+6]
+//		RET
 #endif /* !JOS_INC_X86_H */

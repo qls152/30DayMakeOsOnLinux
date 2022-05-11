@@ -1,3 +1,4 @@
+
 // graphic
 void init_palette(void);
 void set_palette(int start, int end, unsigned char* rgb);
@@ -50,7 +51,7 @@ struct GATE_DESCRIPTOR {
 #define ADR_IDT			0x0026f800
 #define LIMIT_IDT		0x000007ff
 #define ADR_GDT			0x00270000
-#define LIMIT_GDT		0x0000ffff
+#define LIMIT_GDT		0x00000ffff
 #define ADR_BOTPAK		0x00280000
 #define LIMIT_BOTPAK	0x0007ffff
 #define AR_DATA32_RW	0x4092
@@ -64,15 +65,16 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 //asmint32.asm
 void load_gdtr(int limit, int addr);
 void load_idtr(int limit, int addr);
-void asm_inthandler21();
-void asm_inthandler27();
-void asm_inthandler2c();
+void asm_inthandler21(void);
+void asm_inthandler27(void);
+void asm_inthandler2c(void);
 
 // int.c
 void init_pic(void);
 void inthandler21(int *esp);
 void inthandler27(int *esp);
 void inthandler2c(int *esp);
+
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021
